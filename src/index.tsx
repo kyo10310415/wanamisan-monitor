@@ -574,11 +574,17 @@ app.get('/', (c) => {
                     updateStats();
                     populateMonthSelector();
                     populateRankingMonthSelector();
+                    
+                    // グラフ更新（セレクター生成後）
                     updateDailyChart();
                     updateMonthlyChart();
                     updateHourlyChart();
                     updateCategoryChart();
                     updateRanking();
+                    
+                    // イベントリスナー設定
+                    document.getElementById('month-selector').addEventListener('change', updateDailyChart);
+                    document.getElementById('ranking-month-selector').addEventListener('change', updateRanking);
                     
                     // エクスポートボタンのイベント設定
                     document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
@@ -650,8 +656,6 @@ app.get('/', (c) => {
                 if (sortedMonths.length > 0) {
                     selector.value = sortedMonths[sortedMonths.length - 1];
                 }
-                
-                selector.addEventListener('change', updateDailyChart);
             }
 
             // 日次グラフ更新
@@ -948,8 +952,6 @@ app.get('/', (c) => {
                 } else if (sortedMonths.length > 0) {
                     selector.value = sortedMonths[sortedMonths.length - 1];
                 }
-                
-                selector.addEventListener('change', updateRanking);
             }
 
             // ランキング更新（月次対応）
