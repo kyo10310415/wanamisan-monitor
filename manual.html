@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WannaV わなみさん使用ログ分析 - 使い方マニュアル</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #9333ea;
+            border-bottom: 4px solid #9333ea;
+            padding-bottom: 10px;
+            font-size: 28px;
+            margin-top: 0;
+        }
+        
+        h2 {
+            color: #9333ea;
+            border-left: 5px solid #ec4899;
+            padding-left: 15px;
+            margin-top: 40px;
+            font-size: 22px;
+        }
+        
+        h3 {
+            color: #9333ea;
+            font-size: 18px;
+            margin-top: 30px;
+            border-bottom: 2px dotted #ec4899;
+            padding-bottom: 5px;
+        }
+        
+        .info-box {
+            background: #f3e8ff;
+            border-left: 5px solid #9333ea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .tip-box {
+            background: #fce7f3;
+            border-left: 5px solid #ec4899;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .step {
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #9333ea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        li:before {
+            content: "✓";
+            color: #ec4899;
+            font-weight: bold;
+            position: absolute;
+            left: 5px;
+        }
+        
+        .url {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            border: 2px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>📊 WannaV わなみさん使用ログ分析<br>使い方マニュアル</h1>
+    
+    <div class="info-box">
+        <strong>📍 アクセスURL</strong>
+        <div class="url">https://wanamisan-monitor.onrender.com</div>
+    </div>
+
+    <h2>1️⃣ ダッシュボードの概要</h2>
+    
+    <p>このダッシュボードでは、VTuber育成スクールのチャットボット「わなみさん」の使用状況を視覚的に確認できます。</p>
+    
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <strong>統計情報</strong>
+            <p style="font-size: 14px; margin: 5px 0 0 0;">総使用回数、ユーザー数などを一目で確認</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📈</div>
+            <strong>グラフ表示</strong>
+            <p style="font-size: 14px; margin: 5px 0 0 0;">日次・月次・時間帯・カテゴリ別の分析</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🏆</div>
+            <strong>ランキング</strong>
+            <p style="font-size: 14px; margin: 5px 0 0 0;">使用回数のランキング表示</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📥</div>
+            <strong>エクスポート</strong>
+            <p style="font-size: 14px; margin: 5px 0 0 0;">CSV・PDFでデータ出力</p>
+        </div>
+    </div>
+
+    <h2>2️⃣ 画面の見方</h2>
+
+    <h3>📊 統計情報カード（画面上部）</h3>
+    
+    <div class="step">
+        <strong>総使用回数</strong><br>
+        チャットボットが使用された総回数
+    </div>
+    
+    <div class="step">
+        <strong>ユニークユーザー</strong><br>
+        チャットボットを使用した生徒の人数
+    </div>
+    
+    <div class="step">
+        <strong>データ期間</strong><br>
+        記録されている最古から最新までの期間
+    </div>
+    
+    <div class="step">
+        <strong>1日平均</strong><br>
+        1日あたりの平均使用回数
+    </div>
+
+    <h3>📈 グラフエリア</h3>
+    
+    <p><strong>日次使用回数グラフ</strong></p>
+    <ul>
+        <li>毎日の使用回数を折れ線グラフで表示</li>
+        <li>右上のドロップダウンで表示する月を選択できます</li>
+    </ul>
+    
+    <p><strong>月次使用回数グラフ</strong></p>
+    <ul>
+        <li>月ごとの使用回数を棒グラフで表示</li>
+        <li>月間の使用傾向を把握できます</li>
+    </ul>
+    
+    <p><strong>時間帯別使用回数グラフ</strong></p>
+    <ul>
+        <li>0時〜23時の時間帯別使用回数を表示</li>
+        <li>ピークタイム（よく使われる時間帯）が分かります</li>
+    </ul>
+    
+    <p><strong>質問タイプ別統計グラフ</strong></p>
+    <ul>
+        <li>質問の種類別に円グラフで表示</li>
+        <li>どのような質問が多いか確認できます</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h2>3️⃣ ユーザーランキングの使い方</h2>
+
+    <h3>🏆 ランキング表の見方</h3>
+    
+    <div class="step">
+        <span class="step-number">1</span>
+        <strong>月を選択する</strong><br>
+        ランキング表の右上にある「集計月」ドロップダウンから、表示したい月を選択します。<br>
+        <span style="color: #9333ea;">※ デフォルトは今月です</span>
+    </div>
+    
+    <div class="step">
+        <span class="step-number">2</span>
+        <strong>ランキングを確認する</strong><br>
+        • 順位（トップ3にはメダル 🥇🥈🥉）<br>
+        • 生徒名<br>
+        • 学籍番号<br>
+        • 使用回数
+    </div>
+    
+    <div class="tip-box">
+        <strong>💡 ヒント</strong><br>
+        「全期間」を選択すると、すべてのデータでランキングを表示します
+    </div>
+
+    <h3>👤 生徒の詳細を見る</h3>
+    
+    <div class="step">
+        <span class="step-number">1</span>
+        <strong>生徒名をクリック</strong><br>
+        ランキング表の生徒名（紫色のテキスト）をクリックします
+    </div>
+    
+    <div class="step">
+        <span class="step-number">2</span>
+        <strong>詳細画面で確認できる情報</strong><br>
+        • <strong>総使用回数</strong>: その生徒の全期間の使用回数<br>
+        • <strong>最終利用日</strong>: 最後に使用した日時<br>
+        • <strong>よく使う時間帯</strong>: 最も利用が多い時間帯
+    </div>
+    
+    <div class="step">
+        <span class="step-number">3</span>
+        <strong>質問履歴を確認</strong><br>
+        過去の質問が新しい順に表示されます。<br>
+        「回答を表示」をクリックすると、わなみさんの回答が展開されます
+    </div>
+    
+    <div class="step">
+        <span class="step-number">4</span>
+        <strong>画面を閉じる</strong><br>
+        以下のいずれかの方法で詳細画面を閉じます：<br>
+        • 右上の ✕ ボタンをクリック<br>
+        • 画面外（グレーの部分）をクリック<br>
+        • キーボードの ESC キーを押す
+    </div>
+
+    <h2>4️⃣ データのエクスポート</h2>
+
+    <h3>📥 CSV出力</h3>
+    
+    <div class="step">
+        <span class="step-number">1</span>
+        画面右上の「CSV出力」ボタンをクリック
+    </div>
+    
+    <div class="step">
+        <span class="step-number">2</span>
+        ユーザーランキングデータがCSVファイルとしてダウンロードされます
+    </div>
+    
+    <div class="step">
+        <span class="step-number">3</span>
+        ExcelやGoogleスプレッドシートで開いて、さらに詳しく分析できます
+    </div>
+
+    <h3>📄 PDF出力</h3>
+    
+    <div class="step">
+        <span class="step-number">1</span>
+        画面右上の「PDF出力」ボタンをクリック
+    </div>
+    
+    <div class="step">
+        <span class="step-number">2</span>
+        以下の内容を含むレポートがPDFで生成されます：<br>
+        • 統計情報のサマリー<br>
+        • すべてのグラフ（日次・月次・時間帯・カテゴリ）<br>
+        • ユーザーランキング（トップ20）
+    </div>
+    
+    <div class="step">
+        <span class="step-number">3</span>
+        PDFファイルがダウンロードされます（印刷・共有が可能）
+    </div>
+
+    <div class="tip-box">
+        <strong>💡 活用例</strong><br>
+        • 月次レポート作成時にPDF出力<br>
+        • 詳細分析時にCSVをExcelで加工<br>
+        • 会議資料としてPDFを印刷
+    </div>
+
+    <h2>5️⃣ よくある質問</h2>
+
+    <div class="step">
+        <strong>Q: データはリアルタイムに更新されますか？</strong><br>
+        A: ページを再読み込み（F5キー）することで、最新のデータが表示されます。
+    </div>
+
+    <div class="step">
+        <strong>Q: スマートフォンでも使えますか？</strong><br>
+        A: はい。スマートフォンやタブレットでも利用できます。
+    </div>
+
+    <div class="step">
+        <strong>Q: 「WannaV Tutors Community」のデータは表示されますか？</strong><br>
+        A: いいえ。このサーバーのデータは自動的に除外されています。
+    </div>
+
+    <div class="step">
+        <strong>Q: グラフが表示されない場合は？</strong><br>
+        A: ページを再読み込みしてください。それでも表示されない場合は、ブラウザのキャッシュをクリアしてください。
+    </div>
+
+    <div class="footer">
+        <p>WannaV VTuber育成スクール<br>
+        わなみさん使用ログ分析ダッシュボード</p>
+        <p style="margin-top: 10px; font-size: 12px;">発行日: 2026年1月</p>
+    </div>
+</body>
+</html>

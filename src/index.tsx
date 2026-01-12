@@ -1064,4 +1064,17 @@ app.get('/', (c) => {
   `)
 })
 
+// マニュアルページ
+app.get('/manual', async (c) => {
+  try {
+    const fs = await import('fs')
+    const path = await import('path')
+    const manualPath = path.join(process.cwd(), 'manual.html')
+    const content = fs.readFileSync(manualPath, 'utf-8')
+    return c.html(content)
+  } catch (error) {
+    return c.text('Manual not found', 404)
+  }
+})
+
 export default app
