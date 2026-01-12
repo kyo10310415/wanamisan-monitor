@@ -33,49 +33,75 @@ app.get('/api/data', async (c) => {
   }
 })
 
-// CSV パーサー
+// 改良版CSVパーサー（改行とクォートを正しく処理）
 function parseCSV(csvText: string) {
-  const lines = csvText.split('\n')
-  const headers = lines[0].split(',').map(h => h.trim())
+  const rows: string[][] = []
+  const chars = csvText.split('')
+  let currentField = ''
+  let currentRow: string[] = []
+  let insideQuotes = false
+  
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i]
+    const nextChar = chars[i + 1]
+    
+    if (char === '"') {
+      if (insideQuotes && nextChar === '"') {
+        // エスケープされたクォート
+        currentField += '"'
+        i++ // 次の文字をスキップ
+      } else {
+        // クォートの開始/終了
+        insideQuotes = !insideQuotes
+      }
+    } else if (char === ',' && !insideQuotes) {
+      // フィールドの区切り
+      currentRow.push(currentField.trim())
+      currentField = ''
+    } else if (char === '\n' && !insideQuotes) {
+      // 行の終わり
+      currentRow.push(currentField.trim())
+      if (currentRow.some(field => field.length > 0)) {
+        rows.push(currentRow)
+      }
+      currentRow = []
+      currentField = ''
+    } else if (char === '\r' && nextChar === '\n' && !insideQuotes) {
+      // Windows改行 (\r\n)
+      currentRow.push(currentField.trim())
+      if (currentRow.some(field => field.length > 0)) {
+        rows.push(currentRow)
+      }
+      currentRow = []
+      currentField = ''
+      i++ // \nをスキップ
+    } else {
+      currentField += char
+    }
+  }
+  
+  // 最後のフィールドと行を追加
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField.trim())
+    if (currentRow.some(field => field.length > 0)) {
+      rows.push(currentRow)
+    }
+  }
+  
+  if (rows.length === 0) return []
+  
+  const headers = rows[0]
   const data = []
   
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue
-    
-    const values = parseCSVLine(lines[i])
+  for (let i = 1; i < rows.length; i++) {
     const row: any = {}
-    
     headers.forEach((header, index) => {
-      row[header] = values[index] || ''
+      row[header] = rows[i][index] || ''
     })
-    
     data.push(row)
   }
   
   return data
-}
-
-// CSV行をパース（カンマやクォートを考慮）
-function parseCSVLine(line: string): string[] {
-  const values: string[] = []
-  let currentValue = ''
-  let insideQuotes = false
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
-    
-    if (char === '"') {
-      insideQuotes = !insideQuotes
-    } else if (char === ',' && !insideQuotes) {
-      values.push(currentValue.trim())
-      currentValue = ''
-    } else {
-      currentValue += char
-    }
-  }
-  
-  values.push(currentValue.trim())
-  return values
 }
 
 // メインページ
