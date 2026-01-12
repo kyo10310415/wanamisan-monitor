@@ -1,14 +1,20 @@
-// Render用のエントリーポイント
+// Render用のシンプルなNode.jsサーバー
 import { serve } from '@hono/node-server'
-import app from './index'
+import app from './src/index.js'
 
-const port = Number(process.env.PORT) || 3000
+const port = parseInt(process.env.PORT || '3000')
 
-console.log(`🚀 Server starting on port ${port}...`)
+console.log(`🚀 Starting server on port ${port}...`)
+console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`)
 
-serve({
-  fetch: app.fetch,
-  port
-})
-
-console.log(`✅ Server running at http://localhost:${port}`)
+try {
+  serve({
+    fetch: app.fetch,
+    port
+  })
+  
+  console.log(`✅ Server is running on http://localhost:${port}`)
+} catch (error) {
+  console.error('❌ Failed to start server:', error)
+  process.exit(1)
+}
