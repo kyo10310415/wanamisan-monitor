@@ -258,10 +258,17 @@ app.get('/', (c) => {
 
                 <!-- ユーザーランキング -->
                 <div id="ranking-container" class="hidden bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <i class="fas fa-trophy text-yellow-500"></i>
-                        使用ユーザーランキング
-                    </h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-trophy text-yellow-500"></i>
+                            使用ユーザーランキング
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-600">集計月:</label>
+                            <select id="ranking-month-selector" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:outline-none text-sm">
+                            </select>
+                        </div>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -285,6 +292,44 @@ app.get('/', (c) => {
                     <p>&copy; 2025 WannaV VTuber育成スクール</p>
                 </div>
             </footer>
+        </div>
+
+        <!-- 生徒詳細モーダル -->
+        <div id="student-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold" id="modal-student-name"></h3>
+                        <p class="text-purple-100 mt-1" id="modal-student-id"></p>
+                    </div>
+                    <button id="close-modal" class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 140px);">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <p class="text-gray-600 text-sm">総使用回数</p>
+                            <p class="text-3xl font-bold text-purple-600" id="modal-total-count">0</p>
+                        </div>
+                        <div class="bg-pink-50 rounded-lg p-4">
+                            <p class="text-gray-600 text-sm">最終利用日</p>
+                            <p class="text-lg font-bold text-pink-600" id="modal-last-used">-</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <p class="text-gray-600 text-sm">よく使う時間帯</p>
+                            <p class="text-lg font-bold text-blue-600" id="modal-peak-hour">-</p>
+                        </div>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-history text-purple-600"></i>
+                        質問履歴
+                    </h4>
+                    <div id="modal-questions" class="space-y-3">
+                        <!-- 質問履歴がここに挿入される -->
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script>
@@ -318,6 +363,7 @@ app.get('/', (c) => {
                     // 各種データ表示
                     updateStats();
                     populateMonthSelector();
+                    populateRankingMonthSelector();
                     updateDailyChart();
                     updateMonthlyChart();
                     updateHourlyChart();
@@ -657,11 +703,61 @@ app.get('/', (c) => {
                 });
             }
 
-            // ランキング更新
+            // ランキング月セレクター生成
+            function populateRankingMonthSelector() {
+                const months = new Set();
+                allData.forEach(row => {
+                    const date = new Date(row['タイムスタンプ']);
+                    if (!isNaN(date.getTime())) {
+                        const monthKey = dayjs(date).format('YYYY-MM');
+                        months.add(monthKey);
+                    }
+                });
+                
+                const sortedMonths = Array.from(months).sort();
+                const selector = document.getElementById('ranking-month-selector');
+                selector.innerHTML = '';
+                
+                // 「全期間」オプションを追加
+                const allOption = document.createElement('option');
+                allOption.value = 'all';
+                allOption.textContent = '全期間';
+                selector.appendChild(allOption);
+                
+                sortedMonths.forEach(month => {
+                    const option = document.createElement('option');
+                    option.value = month;
+                    option.textContent = dayjs(month).format('YYYY年MM月');
+                    selector.appendChild(option);
+                });
+                
+                // 今月をデフォルト選択
+                const currentMonth = dayjs().format('YYYY-MM');
+                if (sortedMonths.includes(currentMonth)) {
+                    selector.value = currentMonth;
+                } else if (sortedMonths.length > 0) {
+                    selector.value = sortedMonths[sortedMonths.length - 1];
+                }
+                
+                selector.addEventListener('change', updateRanking);
+            }
+
+            // ランキング更新（月次対応）
             function updateRanking() {
+                const selectedMonth = document.getElementById('ranking-month-selector').value;
+                
+                // 選択月でフィルタ
+                let filteredData = allData;
+                if (selectedMonth !== 'all') {
+                    filteredData = allData.filter(row => {
+                        const date = new Date(row['タイムスタンプ']);
+                        return dayjs(date).format('YYYY-MM') === selectedMonth;
+                    });
+                }
+                
                 // ユーザーごとにカウント
                 const userCounts = {};
-                allData.forEach(row => {
+                filteredData.forEach(row => {
                     const studentName = row['生徒名'] || '';
                     const studentId = row['学籍番号'] || '';
                     
@@ -687,7 +783,9 @@ app.get('/', (c) => {
                 
                 sortedUsers.forEach((user, index) => {
                     const tr = document.createElement('tr');
-                    tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                    tr.className = index % 2 === 0 ? 'bg-white hover:bg-purple-50' : 'bg-gray-50 hover:bg-purple-50';
+                    tr.style.cursor = 'pointer';
+                    tr.style.transition = 'background-color 0.2s';
                     
                     // 順位に応じたバッジ
                     let rankBadge = index + 1;
@@ -701,13 +799,116 @@ app.get('/', (c) => {
                     
                     tr.innerHTML = \`
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">\${rankBadge}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">\${user.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-purple-600 hover:underline">\${user.name}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">\${user.id}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">\${user.count.toLocaleString()}</td>
                     \`;
+                    
+                    // クリックイベント
+                    tr.addEventListener('click', () => showStudentDetail(user.name, user.id));
+                    
                     tbody.appendChild(tr);
                 });
             }
+
+            // 生徒詳細モーダル表示
+            function showStudentDetail(studentName, studentId) {
+                // 生徒のデータを抽出
+                const studentData = allData.filter(row => 
+                    row['生徒名'] === studentName && row['学籍番号'] === studentId
+                );
+                
+                if (studentData.length === 0) return;
+                
+                // モーダルに情報を設定
+                document.getElementById('modal-student-name').textContent = studentName;
+                document.getElementById('modal-student-id').textContent = '学籍番号: ' + studentId;
+                document.getElementById('modal-total-count').textContent = studentData.length;
+                
+                // 最終利用日
+                const dates = studentData.map(row => new Date(row['タイムスタンプ'])).sort((a, b) => b - a);
+                document.getElementById('modal-last-used').textContent = dayjs(dates[0]).format('YYYY/MM/DD HH:mm');
+                
+                // よく使う時間帯
+                const hourCounts = {};
+                studentData.forEach(row => {
+                    const hour = new Date(row['タイムスタンプ']).getHours();
+                    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+                });
+                const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
+                document.getElementById('modal-peak-hour').textContent = peakHour ? peakHour[0] + '時台' : '-';
+                
+                // 質問履歴を表示
+                const questionsDiv = document.getElementById('modal-questions');
+                questionsDiv.innerHTML = '';
+                
+                // 日付順にソート（新しい順）
+                const sortedData = [...studentData].sort((a, b) => 
+                    new Date(b['タイムスタンプ']) - new Date(a['タイムスタンプ'])
+                );
+                
+                sortedData.forEach((row, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition';
+                    
+                    const date = dayjs(new Date(row['タイムスタンプ'])).format('YYYY/MM/DD HH:mm');
+                    const questionType = row['質問タイプ'] || 'その他';
+                    const question = row['質問内容'] || '(質問内容なし)';
+                    const answer = row['回答内容'] || '(回答なし)';
+                    
+                    // 質問タイプの色分け
+                    let typeColor = 'bg-gray-100 text-gray-700';
+                    if (questionType === 'lesson_question') typeColor = 'bg-green-100 text-green-700';
+                    else if (questionType === 'sns_consultation') typeColor = 'bg-blue-100 text-blue-700';
+                    else if (questionType === '通常質問') typeColor = 'bg-purple-100 text-purple-700';
+                    
+                    questionDiv.innerHTML = \`
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500"><i class="fas fa-clock mr-1"></i>\${date}</span>
+                            <span class="text-xs px-2 py-1 rounded \${typeColor}">\${questionType}</span>
+                        </div>
+                        <div class="mb-2">
+                            <p class="text-sm font-medium text-gray-900 mb-1"><i class="fas fa-question-circle text-purple-600 mr-1"></i>質問:</p>
+                            <p class="text-sm text-gray-700 pl-5">\${question}</p>
+                        </div>
+                        <details class="text-sm">
+                            <summary class="cursor-pointer text-pink-600 hover:text-pink-700 font-medium">
+                                <i class="fas fa-comment-dots mr-1"></i>回答を表示
+                            </summary>
+                            <p class="text-sm text-gray-600 mt-2 pl-5 border-l-2 border-pink-200">\${answer.substring(0, 500)}\${answer.length > 500 ? '...' : ''}</p>
+                        </details>
+                    \`;
+                    
+                    questionsDiv.appendChild(questionDiv);
+                });
+                
+                // モーダル表示
+                document.getElementById('student-modal').classList.remove('hidden');
+            }
+
+            // モーダルを閉じる
+            document.addEventListener('DOMContentLoaded', () => {
+                const modal = document.getElementById('student-modal');
+                const closeBtn = document.getElementById('close-modal');
+                
+                closeBtn.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                });
+                
+                // モーダル背景クリックで閉じる
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+                
+                // ESCキーで閉じる
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            });
 
             // CSV エクスポート
             function exportCSV() {
