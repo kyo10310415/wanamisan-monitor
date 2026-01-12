@@ -1,21 +1,215 @@
-```txt
-npm install
-npm run dev
+# WannaV わなみさん使用ログ分析ダッシュボード
+
+## プロジェクト概要
+
+**WannaV**（VTuber育成スクール）のチャットボット「わなみさん」の使用ログを視覚化するWebアプリケーションです。
+
+### 主な機能
+
+✅ **完成した機能**
+- ✨ Google Spreadsheetからのリアルタイムデータ取得（CSV形式）
+- 📊 日次使用回数グラフ（月別選択機能付き）
+- 📈 月次使用回数グラフ
+- 🏆 使用ユーザーランキング（生徒名・学籍番号表示）
+- 📉 統計情報ダッシュボード（総使用回数、ユニークユーザー、期間、1日平均）
+- 🔍 データフィルタリング（「WannaV Tutors Community」サーバーを除外）
+- 📱 レスポンシブデザイン対応
+
+### データソース
+
+- **スプレッドシート**: [わなみさん使用ログ](https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/edit?usp=sharing)
+- **フィルタリング**: F列（サーバー名）が「WannaV Tutors Community」のレコードは除外
+
+## URLs
+
+- **開発サーバー**: https://3000-imsyplbgtjzcitiatubnc-c81df28e.sandbox.novita.ai
+- **API エンドポイント**: `/api/data` - スプレッドシートデータ取得
+
+## データアーキテクチャ
+
+### データモデル
+
+スプレッドシートの列構造：
+- `タイムスタンプ`: 使用日時（ISO 8601形式）
+- `ユーザーID`: Discord ユーザーID
+- `ユーザー名`: Discord 表示名
+- `チャンネル名`: 質問チャンネル名
+- `サーバー名`: Discord サーバー名（フィルタリング対象）
+- `質問内容`: ユーザーの質問
+- `回答内容`: わなみさんの回答
+- `生徒名`: 生徒の実名（N列）
+- `学籍番号`: 生徒の学籍番号（O列）
+
+### データフロー
+
+```
+Google Sheets (CSV Export)
+    ↓
+Hono API (/api/data)
+    ↓
+フィルタリング（WannaV Tutors Community除外）
+    ↓
+フロントエンド（Chart.js で可視化）
 ```
 
-```txt
-npm run deploy
+### 使用技術
+
+- **バックエンド**: Hono (Cloudflare Workers対応)
+- **フロントエンド**: Vanilla JavaScript + TailwindCSS
+- **グラフ**: Chart.js
+- **日付処理**: Day.js
+- **デプロイ**: Cloudflare Pages（予定）
+
+## 使い方
+
+### 開発環境
+
+1. **依存関係のインストール**:
+   ```bash
+   cd /home/user/webapp
+   npm install
+   ```
+
+2. **ビルド**:
+   ```bash
+   npm run build
+   ```
+
+3. **開発サーバー起動**:
+   ```bash
+   # PM2で起動
+   pm2 start ecosystem.config.cjs
+   
+   # または直接起動
+   npm run dev:sandbox
+   ```
+
+4. **動作確認**:
+   ```bash
+   curl http://localhost:3000
+   ```
+
+### 本番デプロイ
+
+Cloudflare Pagesにデプロイする場合：
+
+```bash
+# ビルド＆デプロイ
+npm run deploy:prod
 ```
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
+## 画面構成
 
-```txt
-npm run cf-typegen
+### 1. 統計情報カード（4枚）
+- 📊 **総使用回数**: 全レコード数
+- 👥 **ユニークユーザー**: 生徒名ベースの一意ユーザー数
+- 📅 **データ期間**: 最古〜最新の日付範囲
+- 📈 **1日平均**: 期間内の1日あたり平均使用回数
+
+### 2. 日次グラフ
+- **横軸**: 日付（MM/DD形式）
+- **縦軸**: その日の使用回数
+- **機能**: 月選択ドロップダウンで表示月を切り替え
+- **グラフタイプ**: 折れ線グラフ（エリアチャート）
+
+### 3. 月次グラフ
+- **横軸**: 年月（YYYY年MM月形式）
+- **縦軸**: 月間総使用回数
+- **グラフタイプ**: 棒グラフ
+
+### 4. ユーザーランキングテーブル
+- **列**:
+  - 順位（トップ3はメダル表示 🥇🥈🥉）
+  - 生徒名
+  - 学籍番号
+  - 使用回数
+- **ソート**: 使用回数降順
+
+## API仕様
+
+### `GET /api/data`
+
+スプレッドシートのデータを取得します。
+
+**レスポンス例**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "タイムスタンプ": "2025-11-28T10:44:45.838Z",
+      "ユーザーID": "766666980086120470",
+      "ユーザー名": "kyo8742",
+      "サーバー名": "WannaV19",
+      "生徒名": "佐藤未歩",
+      "学籍番号": "OLTS250911-HF",
+      ...
+    }
+  ]
+}
 ```
 
-Pass the `CloudflareBindings` as generics when instantiation `Hono`:
-
-```ts
-// src/index.ts
-const app = new Hono<{ Bindings: CloudflareBindings }>()
+**エラーレスポンス例**:
+```json
+{
+  "success": false,
+  "error": "Failed to fetch spreadsheet data"
+}
 ```
+
+## 推奨される次のステップ
+
+### 🚀 機能拡張
+
+1. **時間帯分析**:
+   - 時間帯別の使用頻度グラフ追加
+   - ピークタイム検出機能
+
+2. **質問カテゴリ分析**:
+   - 質問タイプ（lesson_question, sns_consultation等）ごとの統計
+   - カテゴリ別使用回数の円グラフ
+
+3. **エクスポート機能**:
+   - CSV/PDFレポート出力
+   - グラフ画像ダウンロード
+
+4. **フィルター機能**:
+   - 期間指定フィルター
+   - 生徒名検索機能
+   - サーバー別表示切り替え
+
+5. **リアルタイム更新**:
+   - 自動リフレッシュ機能
+   - WebSocket経由のリアルタイムデータ更新
+
+### 🛠️ 技術改善
+
+1. **キャッシング**:
+   - Cloudflare KV を使ったデータキャッシュ
+   - API レスポンス高速化
+
+2. **認証機能**:
+   - 管理者ログイン機能追加
+   - アクセス制限実装
+
+3. **パフォーマンス最適化**:
+   - データページネーション
+   - 遅延ロード実装
+
+## デプロイ状況
+
+- **プラットフォーム**: Cloudflare Pages（準備完了）
+- **開発環境**: ✅ 稼働中
+- **本番環境**: 未デプロイ
+- **最終更新日**: 2026-01-12
+
+## ライセンス
+
+© 2025 WannaV VTuber育成スクール
+
+---
+
+**開発者向けメモ**:
+- ポート3000を使用
+- PM2でプロセス管理
+- スプレッドシートの公開設定が必要（CSV Export有効化）
