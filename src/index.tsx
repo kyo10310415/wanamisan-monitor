@@ -6,6 +6,213 @@ const app = new Hono()
 // CORS設定
 app.use('/api/*', cors())
 
+// マニュアルページ
+app.get('/manual.html', (c) => {
+  return c.html(`
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使い方マニュアル - WannaV わなみさん使用ログ分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            body { background: white !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-purple-600 mb-2">
+                <i class="fas fa-book mr-2"></i>
+                WannaV わなみさん使用ログ分析
+            </h1>
+            <h2 class="text-xl text-gray-600">使い方マニュアル</h2>
+        </div>
+
+        <div class="space-y-8">
+            <section>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-600 pb-2">
+                    <i class="fas fa-info-circle mr-2 text-purple-600"></i>
+                    概要
+                </h3>
+                <p class="text-gray-700 leading-relaxed">
+                    このダッシュボードは、WannaV VTuber育成スクールのチャットボット「わなみさん」の使用状況を可視化・分析するためのツールです。
+                    日次・月次の使用状況、時間帯分析、質問カテゴリ分析、ユーザーランキングなどを確認できます。
+                </p>
+            </section>
+
+            <section>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-600 pb-2">
+                    <i class="fas fa-chart-bar mr-2 text-purple-600"></i>
+                    統計情報
+                </h3>
+                <p class="text-gray-700 mb-3">ダッシュボード上部に4つの主要統計が表示されます：</p>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li><strong>総使用回数</strong>: チャットボットが使用された総回数</li>
+                    <li><strong>ユニークユーザー</strong>: 使用したユーザーの総数</li>
+                    <li><strong>データ期間</strong>: データの最初と最後の日付</li>
+                    <li><strong>1日平均</strong>: 1日あたりの平均使用回数</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-600 pb-2">
+                    <i class="fas fa-calendar-day mr-2 text-purple-600"></i>
+                    日次グラフ
+                </h3>
+                <p class="text-gray-700 mb-3">日付ごとの使用回数を折れ線グラフで表示します。</p>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>横軸: 日付（MM/DD形式）</li>
+                    <li>縦軸: 使用回数</li>
+                    <li>月選択: ドロップダウンから表示したい月を選択できます</li>
+                    <li>ホバー: グラフ上でマウスを移動すると詳細な数値が表示されます</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-600 pb-2">
+                    <i class="fas fa-calendar-alt mr-2 text-purple-600"></i>
+                    月次グラフ
+                </h3>
+                <p class="text-gray-700 mb-3">月ごとの総使用回数を棒グラフで表示します。</p>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>横軸: 年月（YYYY年MM月形式）</li>
+                    <li>縦軸: 月間総使用回数</li>
+                    <li>月ごとの使用傾向を確認できます</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-600 pb-2">
+                    <i class="fas fa-clock mr-2 text-purple-600"></i>
+                    時間帯分析グラフ
+                </h3>
+                <p class="text-gray-700 mb-3">24時間ごとの使用回数を棒グラフで表示します。</p>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>横軸: 時間帯（0〜23時）</li>
+                    <li>縦軸: 使用回数</li>
+                    <li>ピークタイムを特定できます</li>
+                    <li>朝・昼・夜の使用傾向を把握できます</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-600 pb-2">
+                    <i class="fas fa-tags mr-2 text-purple-600"></i>
+                    質問カテゴリ分析
+                </h3>
+                <p class="text-gray-700 mb-3">質問タイプ別の使用状況をドーナツグラフで表示します。</p>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>各カテゴリの割合を視覚的に確認できます</li>
+                    <li>ホバーすると具体的な回数と割合が表示されます</li>
+                    <li>主なカテゴリ: lesson_question（授業関連）、sns_consultation（SNS相談）、通常質問</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-600 pb-2">
+                    <i class="fas fa-trophy mr-2 text-purple-600"></i>
+                    ユーザーランキング
+                </h3>
+                <p class="text-gray-700 mb-3">使用回数が多いユーザーを降順で表示します。</p>
+                
+                <h4 class="font-bold text-gray-800 mt-4 mb-2">月次集計機能：</h4>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>右上のドロップダウンから表示したい月を選択できます</li>
+                    <li>デフォルトは今月のデータを表示</li>
+                    <li>「全期間」を選択すると全データを表示</li>
+                </ul>
+
+                <h4 class="font-bold text-gray-800 mt-4 mb-2">ランキング表示：</h4>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>トップ3にはメダル（🥇🥈🥉）が表示されます</li>
+                    <li>順位、生徒名、学籍番号、使用回数が表示されます</li>
+                    <li>行をホバーすると紫色にハイライトされます</li>
+                </ul>
+
+                <h4 class="font-bold text-gray-800 mt-4 mb-2">生徒詳細モーダル：</h4>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>生徒名をクリックすると詳細モーダルが開きます</li>
+                    <li>統計情報: 総使用回数、最終利用日、よく使う時間帯</li>
+                    <li>質問履歴: 過去の全質問と回答を表示（新しい順）</li>
+                    <li>質問タイプ別に色分けされます:
+                        <ul class="list-disc pl-6 mt-1">
+                            <li class="text-green-600">lesson_question（授業関連）: 緑</li>
+                            <li class="text-blue-600">sns_consultation（SNS相談）: 青</li>
+                            <li class="text-purple-600">通常質問: 紫</li>
+                            <li class="text-gray-600">その他: グレー</li>
+                        </ul>
+                    </li>
+                    <li>回答は「回答を表示」ボタンで展開できます</li>
+                    <li>長い回答は500文字で切り詰められます</li>
+                </ul>
+
+                <h4 class="font-bold text-gray-800 mt-4 mb-2">モーダルの閉じ方：</h4>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>✕ボタンをクリック</li>
+                    <li>モーダル背景（暗い部分）をクリック</li>
+                    <li>ESCキーを押す</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-600 pb-2">
+                    <i class="fas fa-download mr-2 text-purple-600"></i>
+                    エクスポート機能
+                </h3>
+                <p class="text-gray-700 mb-3">ヘッダーの右上にエクスポートボタンがあります。</p>
+                
+                <h4 class="font-bold text-gray-800 mt-4 mb-2">CSV出力：</h4>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>ユーザーランキングをCSV形式でダウンロード</li>
+                    <li>Excelで開いて追加分析が可能</li>
+                    <li>ファイル名: wannav_usage_report_YYYYMMDD.csv</li>
+                </ul>
+
+                <h4 class="font-bold text-gray-800 mt-4 mb-2">PDF出力：</h4>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>統計情報と全グラフをPDF形式でダウンロード</li>
+                    <li>報告書として活用できます</li>
+                    <li>ファイル名: wannav_usage_report_YYYYMMDD.pdf</li>
+                </ul>
+            </section>
+
+            <section class="bg-purple-50 p-6 rounded-lg">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                    活用のヒント
+                </h3>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li>月次グラフで全体の傾向を把握してから、日次グラフで詳細を確認</li>
+                    <li>時間帯分析でピークタイムを特定し、サポート体制を最適化</li>
+                    <li>質問カテゴリ分析で生徒のニーズを把握</li>
+                    <li>ランキングから積極的なユーザーを特定し、フィードバックを収集</li>
+                    <li>生徒詳細モーダルで個別の使用パターンを分析</li>
+                    <li>定期的にPDFレポートを作成し、運営チームで共有</li>
+                </ul>
+            </section>
+
+            <footer class="text-center text-gray-500 text-sm mt-12 pt-6 border-t border-gray-200">
+                <p>© 2025 WannaV VTuber育成スクール</p>
+                <p class="mt-2">
+                    <button onclick="window.print()" class="no-print text-purple-600 hover:underline">
+                        <i class="fas fa-print mr-1"></i>
+                        このマニュアルを印刷
+                    </button>
+                </p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>
+  `)
+})
+
 // API: スプレッドシートデータ取得
 app.get('/api/data', async (c) => {
   try {
@@ -939,10 +1146,11 @@ app.get('/', (c) => {
                 
                 const sortedUsers = Object.values(userCounts).sort((a, b) => b.count - a.count);
                 
-                // CSV作成
-                let csv = headers.join(',') + '\\n';
+                // CSV作成（BOM付き）
+                const bom = '\uFEFF';
+                let csv = bom + headers.join(',') + '\n';
                 sortedUsers.forEach((user, index) => {
-                    csv += \`\${index + 1},"\${user.name}","\${user.id}",\${user.count}\\n\`;
+                    csv += \`\${index + 1},"\${user.name}","\${user.id}",\${user.count}\n\`;
                 });
                 
                 // ダウンロード
@@ -959,105 +1167,64 @@ app.get('/', (c) => {
 
             // PDF エクスポート
             async function exportPDF() {
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                
-                // タイトル
-                pdf.setFontSize(18);
-                pdf.text('WannaV わなみさん使用ログレポート', 105, 20, { align: 'center' });
-                
-                pdf.setFontSize(10);
-                pdf.text(\`生成日: \${dayjs().format('YYYY年MM月DD日')}\`, 105, 28, { align: 'center' });
-                
-                // 統計情報
-                pdf.setFontSize(12);
-                pdf.text('統計情報', 20, 40);
-                
-                pdf.setFontSize(10);
-                const totalCount = document.getElementById('total-count').textContent;
-                const uniqueUsers = document.getElementById('unique-users').textContent;
-                const dateRange = document.getElementById('date-range').textContent;
-                const dailyAvg = document.getElementById('daily-avg').textContent;
-                
-                pdf.text(\`総使用回数: \${totalCount}\`, 20, 50);
-                pdf.text(\`ユニークユーザー: \${uniqueUsers}\`, 20, 58);
-                pdf.text(\`データ期間: \${dateRange}\`, 20, 66);
-                pdf.text(\`1日平均: \${dailyAvg}\`, 20, 74);
-                
-                // グラフをキャプチャ
-                let yPos = 90;
-                
-                // 日次グラフ
-                const dailyCanvas = document.getElementById('daily-chart');
-                const dailyImg = dailyCanvas.toDataURL('image/png');
-                pdf.addPage();
-                pdf.setFontSize(12);
-                pdf.text('日次使用回数', 20, 20);
-                pdf.addImage(dailyImg, 'PNG', 20, 30, 170, 100);
-                
-                // 月次グラフ
-                const monthlyCanvas = document.getElementById('monthly-chart');
-                const monthlyImg = monthlyCanvas.toDataURL('image/png');
-                pdf.addPage();
-                pdf.setFontSize(12);
-                pdf.text('月次使用回数', 20, 20);
-                pdf.addImage(monthlyImg, 'PNG', 20, 30, 170, 100);
-                
-                // 時間帯グラフ
-                const hourlyCanvas = document.getElementById('hourly-chart');
-                const hourlyImg = hourlyCanvas.toDataURL('image/png');
-                pdf.addPage();
-                pdf.setFontSize(12);
-                pdf.text('時間帯別使用回数', 20, 20);
-                pdf.addImage(hourlyImg, 'PNG', 20, 30, 170, 100);
-                
-                // カテゴリグラフ
-                const categoryCanvas = document.getElementById('category-chart');
-                const categoryImg = categoryCanvas.toDataURL('image/png');
-                pdf.addPage();
-                pdf.setFontSize(12);
-                pdf.text('質問タイプ別統計', 20, 20);
-                pdf.addImage(categoryImg, 'PNG', 20, 30, 170, 100);
-                
-                // ランキングテーブル
-                pdf.addPage();
-                pdf.setFontSize(12);
-                pdf.text('使用ユーザーランキング (トップ20)', 20, 20);
-                
-                // テーブルデータ取得
-                const tbody = document.getElementById('ranking-body');
-                const rows = Array.from(tbody.querySelectorAll('tr')).slice(0, 20);
-                
-                pdf.setFontSize(9);
-                let tableY = 30;
-                pdf.text('順位', 20, tableY);
-                pdf.text('生徒名', 40, tableY);
-                pdf.text('学籍番号', 100, tableY);
-                pdf.text('使用回数', 160, tableY);
-                
-                tableY += 8;
-                rows.forEach((row, index) => {
-                    const cells = row.querySelectorAll('td');
-                    const rank = (index + 1).toString();
-                    const name = cells[1].textContent;
-                    const id = cells[2].textContent;
-                    const count = cells[3].textContent;
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
                     
-                    pdf.text(rank, 20, tableY);
-                    pdf.text(name, 40, tableY);
-                    pdf.text(id, 100, tableY);
-                    pdf.text(count, 160, tableY);
+                    // 統計情報セクションを画像化
+                    const statsSection = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-4.gap-6');
+                    const statsCanvas = await html2canvas(statsSection, {
+                        scale: 2,
+                        backgroundColor: '#f9fafb'
+                    });
+                    const statsImg = statsCanvas.toDataURL('image/png');
                     
-                    tableY += 7;
+                    // タイトルと統計情報
+                    pdf.addImage(statsImg, 'PNG', 10, 10, 190, 40);
                     
-                    if (tableY > 270 && index < rows.length - 1) {
-                        pdf.addPage();
-                        tableY = 20;
-                    }
-                });
-                
-                // 保存
-                pdf.save(\`wannav_usage_report_\${dayjs().format('YYYYMMDD')}.pdf\`);
+                    // 日次グラフ
+                    const dailyCanvas = document.getElementById('daily-chart');
+                    const dailyImg = dailyCanvas.toDataURL('image/png');
+                    pdf.addPage();
+                    pdf.addImage(dailyImg, 'PNG', 10, 20, 190, 110);
+                    
+                    // 月次グラフ
+                    const monthlyCanvas = document.getElementById('monthly-chart');
+                    const monthlyImg = monthlyCanvas.toDataURL('image/png');
+                    pdf.addPage();
+                    pdf.addImage(monthlyImg, 'PNG', 10, 20, 190, 110);
+                    
+                    // 時間帯グラフ
+                    const hourlyCanvas = document.getElementById('hourly-chart');
+                    const hourlyImg = hourlyCanvas.toDataURL('image/png');
+                    pdf.addPage();
+                    pdf.addImage(hourlyImg, 'PNG', 10, 20, 190, 110);
+                    
+                    // カテゴリグラフ
+                    const categoryCanvas = document.getElementById('category-chart');
+                    const categoryImg = categoryCanvas.toDataURL('image/png');
+                    pdf.addPage();
+                    pdf.addImage(categoryImg, 'PNG', 10, 20, 190, 110);
+                    
+                    // ランキングテーブルを画像化
+                    const rankingSection = document.getElementById('ranking-container');
+                    const rankingCanvas = await html2canvas(rankingSection, {
+                        scale: 2,
+                        backgroundColor: '#ffffff'
+                    });
+                    const rankingImg = rankingCanvas.toDataURL('image/png');
+                    
+                    pdf.addPage();
+                    // ランキング画像の高さに応じて自動調整
+                    const imgHeight = (rankingCanvas.height * 190) / rankingCanvas.width;
+                    pdf.addImage(rankingImg, 'PNG', 10, 10, 190, Math.min(imgHeight, 277));
+                    
+                    // 保存
+                    pdf.save(\`wannav_usage_report_\${dayjs().format('YYYYMMDD')}.pdf\`);
+                } catch (error) {
+                    console.error('PDF生成エラー:', error);
+                    alert('PDF生成中にエラーが発生しました。');
+                }
             }
 
             // 初期化実行
@@ -1068,17 +1235,6 @@ app.get('/', (c) => {
   `)
 })
 
-// マニュアルページ
-app.get('/manual', async (c) => {
-  try {
-    const fs = await import('fs')
-    const path = await import('path')
-    const manualPath = path.join(process.cwd(), 'manual.html')
-    const content = fs.readFileSync(manualPath, 'utf-8')
-    return c.html(content)
-  } catch (error) {
-    return c.text('Manual not found', 404)
-  }
-})
+
 
 export default app
