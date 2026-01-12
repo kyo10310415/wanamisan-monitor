@@ -142,6 +142,10 @@ app.get('/', (c) => {
                                 <i class="fas fa-file-pdf"></i>
                                 PDF出力
                             </button>
+                            <a href="/manual.html" target="_blank" class="bg-white text-green-600 px-4 py-2 rounded-lg font-bold hover:bg-green-50 transition flex items-center gap-2">
+                                <i class="fas fa-book"></i>
+                                使い方マニュアル
+                            </a>
                         </div>
                     </div>
                 </div>
