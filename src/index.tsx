@@ -131,7 +131,6 @@ app.get('/', (c) => {
                                 <i class="fas fa-chart-line"></i>
                                 WannaV わなみさん使用ログ分析
                             </h1>
-                            <p class="text-purple-100 mt-2">VTuber育成スクールのチャットボット使用状況を可視化</p>
                         </div>
                         <!-- エクスポートボタン -->
                         <div class="flex gap-3">
