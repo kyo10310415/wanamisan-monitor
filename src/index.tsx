@@ -51,13 +51,16 @@ app.get('/manual.html', (c) => {
                     <i class="fas fa-chart-bar mr-2 text-purple-600"></i>
                     統計情報
                 </h3>
-                <p class="text-gray-700 mb-3">ダッシュボード上部に4つの主要統計が表示されます：</p>
+                <p class="text-gray-700 mb-3">ダッシュボード上部に3つの主要統計が表示されます：</p>
                 <ul class="list-disc pl-6 space-y-2 text-gray-700">
-                    <li><strong>総使用回数</strong>: チャットボットが使用された総回数</li>
-                    <li><strong>ユニークユーザー</strong>: 使用したユーザーの総数</li>
+                    <li><strong>総使用回数</strong>: 生徒名が登録されているレコードの総数</li>
                     <li><strong>データ期間</strong>: データの最初と最後の日付</li>
                     <li><strong>1日平均</strong>: 1日あたりの平均使用回数</li>
                 </ul>
+                <p class="text-gray-700 mt-3 text-sm">
+                    <i class="fas fa-info-circle text-blue-600 mr-1"></i>
+                    <strong>注意</strong>: 統計とグラフは生徒名が登録されているレコードのみを集計しています。生徒名が空のレコードは除外されます。
+                </p>
             </section>
 
             <section>
@@ -373,28 +376,15 @@ app.get('/', (c) => {
                 </div>
 
                 <!-- 統計情報 -->
-                <div id="stats" class="hidden grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <div class="flex items-center justify-between">
-                            <div class="w-full">
-                                <p class="text-gray-500 text-sm">総使用回数</p>
-                                <p class="text-3xl font-bold text-purple-600" id="total-count">0</p>
-                                <p class="text-xs text-gray-400 mt-1">
-                                    登録済: <span id="registered-count" class="text-purple-500 font-medium">0</span> / 
-                                    未登録: <span id="unregistered-count" class="text-gray-500 font-medium">0</span>
-                                </p>
-                            </div>
-                            <i class="fas fa-comments text-4xl text-purple-200"></i>
-                        </div>
-                    </div>
+                <div id="stats" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="bg-white rounded-lg shadow-md p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">ユニークユーザー</p>
-                                <p class="text-3xl font-bold text-pink-600" id="unique-users">0</p>
-                                <p class="text-xs text-gray-400 mt-1">登録済み生徒のみ</p>
+                                <p class="text-gray-500 text-sm">総使用回数</p>
+                                <p class="text-3xl font-bold text-purple-600" id="total-count">0</p>
+                                <p class="text-xs text-gray-400 mt-1">生徒名登録済みのみ</p>
                             </div>
-                            <i class="fas fa-users text-4xl text-pink-200"></i>
+                            <i class="fas fa-comments text-4xl text-purple-200"></i>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg shadow-md p-6">
@@ -411,7 +401,6 @@ app.get('/', (c) => {
                             <div>
                                 <p class="text-gray-500 text-sm">1日平均</p>
                                 <p class="text-3xl font-bold text-green-600" id="daily-avg">0</p>
-                                <p class="text-xs text-gray-400 mt-1">登録済み使用分</p>
                             </div>
                             <i class="fas fa-chart-bar text-4xl text-green-200"></i>
                         </div>
@@ -606,21 +595,13 @@ app.get('/', (c) => {
 
             // 統計情報更新
             function updateStats() {
-                // 登録済み（生徒名あり）と未登録（生徒名なし）を分ける
+                // 登録済み（生徒名あり）のみを使用
                 const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
-                const unregisteredData = allData.filter(row => !row['生徒名'] || !row['生徒名'].trim());
                 
-                const totalCount = allData.length;
-                const registeredCount = registeredData.length;
-                const unregisteredCount = unregisteredData.length;
+                const totalCount = registeredData.length;
                 
-                // ユニークユーザー（生徒名ベース）
-                const uniqueUsers = new Set(
-                    registeredData.map(row => row['生徒名'])
-                ).size;
-                
-                // 日付範囲（全データ）
-                const dates = allData
+                // 日付範囲（登録済みデータのみ）
+                const dates = registeredData
                     .map(row => new Date(row['タイムスタンプ']))
                     .filter(d => !isNaN(d.getTime()))
                     .sort((a, b) => a - b);
@@ -633,20 +614,20 @@ app.get('/', (c) => {
                 const dayCount = dates.length > 0 
                     ? Math.ceil((dates[dates.length - 1] - dates[0]) / (1000 * 60 * 60 * 24)) + 1
                     : 1;
-                const dailyAvg = (registeredCount / dayCount).toFixed(1);
+                const dailyAvg = (totalCount / dayCount).toFixed(1);
                 
                 document.getElementById('total-count').textContent = totalCount.toLocaleString();
-                document.getElementById('registered-count').textContent = registeredCount.toLocaleString();
-                document.getElementById('unregistered-count').textContent = unregisteredCount.toLocaleString();
-                document.getElementById('unique-users').textContent = uniqueUsers;
                 document.getElementById('date-range').textContent = dateRange;
                 document.getElementById('daily-avg').textContent = dailyAvg;
             }
 
             // 月セレクター生成
             function populateMonthSelector() {
+                // 生徒名ありのデータのみ
+                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
+                
                 const months = new Set();
-                allData.forEach(row => {
+                registeredData.forEach(row => {
                     const date = new Date(row['タイムスタンプ']);
                     if (!isNaN(date.getTime())) {
                         const monthKey = dayjs(date).format('YYYY-MM');
@@ -674,8 +655,9 @@ app.get('/', (c) => {
             function updateDailyChart() {
                 const selectedMonth = document.getElementById('month-selector').value;
                 
-                // 選択月のデータをフィルタ
+                // 生徒名ありのデータのみ + 選択月でフィルタ
                 const monthData = allData.filter(row => {
+                    if (!row['生徒名'] || !row['生徒名'].trim()) return false;
                     const date = new Date(row['タイムスタンプ']);
                     return dayjs(date).format('YYYY-MM') === selectedMonth;
                 });
@@ -742,9 +724,12 @@ app.get('/', (c) => {
 
             // 月次グラフ更新
             function updateMonthlyChart() {
+                // 生徒名ありのデータのみ
+                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
+                
                 // 月ごとにカウント
                 const monthlyCounts = {};
-                allData.forEach(row => {
+                registeredData.forEach(row => {
                     const date = new Date(row['タイムスタンプ']);
                     if (!isNaN(date.getTime())) {
                         const month = dayjs(date).format('YYYY-MM');
@@ -799,10 +784,13 @@ app.get('/', (c) => {
 
             // 時間帯グラフ更新
             function updateHourlyChart() {
+                // 生徒名ありのデータのみ
+                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
+                
                 // 時間帯ごとにカウント（0-23時）
                 const hourlyCounts = Array(24).fill(0);
                 
-                allData.forEach(row => {
+                registeredData.forEach(row => {
                     const date = new Date(row['タイムスタンプ']);
                     if (!isNaN(date.getTime())) {
                         const hour = date.getHours();
@@ -861,10 +849,13 @@ app.get('/', (c) => {
 
             // カテゴリグラフ更新
             function updateCategoryChart() {
+                // 生徒名ありのデータのみ
+                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
+                
                 // カテゴリごとにカウント
                 const categoryCounts = {};
                 
-                allData.forEach(row => {
+                registeredData.forEach(row => {
                     const category = row['質問タイプ'] || 'その他';
                     categoryCounts[category] = (categoryCounts[category] || 0) + 1;
                 });
@@ -931,8 +922,11 @@ app.get('/', (c) => {
 
             // ランキング月セレクター生成
             function populateRankingMonthSelector() {
+                // 生徒名ありのデータのみ
+                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
+                
                 const months = new Set();
-                allData.forEach(row => {
+                registeredData.forEach(row => {
                     const date = new Date(row['タイムスタンプ']);
                     if (!isNaN(date.getTime())) {
                         const monthKey = dayjs(date).format('YYYY-MM');
@@ -970,10 +964,10 @@ app.get('/', (c) => {
             function updateRanking() {
                 const selectedMonth = document.getElementById('ranking-month-selector').value;
                 
-                // 選択月でフィルタ
-                let filteredData = allData;
+                // 選択月でフィルタ（生徒名ありのみ）
+                let filteredData = registeredData;
                 if (selectedMonth !== 'all') {
-                    filteredData = allData.filter(row => {
+                    filteredData = registeredData.filter(row => {
                         const date = new Date(row['タイムスタンプ']);
                         return dayjs(date).format('YYYY-MM') === selectedMonth;
                     });
