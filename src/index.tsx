@@ -539,6 +539,7 @@ app.get('/', (c) => {
 
         <script>
             let allData = [];
+            let registeredData = []; // 生徒名登録済みデータ（グローバル）
             let dailyChart = null;
             let monthlyChart = null;
             let hourlyChart = null;
@@ -558,6 +559,9 @@ app.get('/', (c) => {
                     allData = result.data.filter(row => {
                         return row['サーバー名'] !== 'WannaV Tutors Community';
                     });
+                    
+                    // 生徒名登録済みデータのみを抽出（グローバル変数に保存）
+                    registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
                     
                     // 表示
                     document.getElementById('loading').classList.add('hidden');
@@ -595,9 +599,6 @@ app.get('/', (c) => {
 
             // 統計情報更新
             function updateStats() {
-                // 登録済み（生徒名あり）のみを使用
-                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
-                
                 const totalCount = registeredData.length;
                 
                 // 日付範囲（登録済みデータのみ）
@@ -623,9 +624,6 @@ app.get('/', (c) => {
 
             // 月セレクター生成
             function populateMonthSelector() {
-                // 生徒名ありのデータのみ
-                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
-                
                 const months = new Set();
                 registeredData.forEach(row => {
                     const date = new Date(row['タイムスタンプ']);
@@ -724,9 +722,6 @@ app.get('/', (c) => {
 
             // 月次グラフ更新
             function updateMonthlyChart() {
-                // 生徒名ありのデータのみ
-                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
-                
                 // 月ごとにカウント
                 const monthlyCounts = {};
                 registeredData.forEach(row => {
@@ -784,9 +779,6 @@ app.get('/', (c) => {
 
             // 時間帯グラフ更新
             function updateHourlyChart() {
-                // 生徒名ありのデータのみ
-                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
-                
                 // 時間帯ごとにカウント（0-23時）
                 const hourlyCounts = Array(24).fill(0);
                 
@@ -849,9 +841,6 @@ app.get('/', (c) => {
 
             // カテゴリグラフ更新
             function updateCategoryChart() {
-                // 生徒名ありのデータのみ
-                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
-                
                 // カテゴリごとにカウント
                 const categoryCounts = {};
                 
@@ -922,9 +911,6 @@ app.get('/', (c) => {
 
             // ランキング月セレクター生成
             function populateRankingMonthSelector() {
-                // 生徒名ありのデータのみ
-                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
-                
                 const months = new Set();
                 registeredData.forEach(row => {
                     const date = new Date(row['タイムスタンプ']);
