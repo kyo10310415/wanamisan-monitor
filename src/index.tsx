@@ -1149,10 +1149,10 @@ app.get('/', (c) => {
                 const sortedUsers = Object.values(userCounts).sort((a, b) => b.count - a.count);
                 
                 // CSV作成（BOM付き）
-                const bom = '\uFEFF';
-                let csv = bom + headers.join(',') + '\n';
+                const bom = '\\uFEFF';
+                let csv = bom + headers.join(',') + '\\n';
                 sortedUsers.forEach((user, index) => {
-                    csv += \`\${index + 1},"\${user.name}","\${user.id}",\${user.count}\n\`;
+                    csv += \`\${index + 1},"\${user.name}","\${user.id}",\${user.count}\\n\`;
                 });
                 
                 // ダウンロード
@@ -1174,7 +1174,7 @@ app.get('/', (c) => {
                     const pdf = new jsPDF('p', 'mm', 'a4');
                     
                     // 統計情報セクションを画像化
-                    const statsSection = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-4.gap-6');
+                    const statsSection = document.querySelector('.grid.grid-cols-1.md\\\\:grid-cols-4.gap-6');
                     const statsCanvas = await html2canvas(statsSection, {
                         scale: 2,
                         backgroundColor: '#f9fafb'
