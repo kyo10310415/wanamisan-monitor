@@ -21,6 +21,8 @@
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.18.2",
+    "marked": "^17.0.1",
+    "md-to-pdf": "^5.2.5",
     "puppeteer": "^24.35.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

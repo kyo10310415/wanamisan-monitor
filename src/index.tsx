@@ -376,9 +376,13 @@ app.get('/', (c) => {
                 <div id="stats" class="hidden grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-lg shadow-md p-6">
                         <div class="flex items-center justify-between">
-                            <div>
+                            <div class="w-full">
                                 <p class="text-gray-500 text-sm">総使用回数</p>
                                 <p class="text-3xl font-bold text-purple-600" id="total-count">0</p>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    登録済: <span id="registered-count" class="text-purple-500 font-medium">0</span> / 
+                                    未登録: <span id="unregistered-count" class="text-gray-500 font-medium">0</span>
+                                </p>
                             </div>
                             <i class="fas fa-comments text-4xl text-purple-200"></i>
                         </div>
@@ -388,6 +392,7 @@ app.get('/', (c) => {
                             <div>
                                 <p class="text-gray-500 text-sm">ユニークユーザー</p>
                                 <p class="text-3xl font-bold text-pink-600" id="unique-users">0</p>
+                                <p class="text-xs text-gray-400 mt-1">登録済み生徒のみ</p>
                             </div>
                             <i class="fas fa-users text-4xl text-pink-200"></i>
                         </div>
@@ -406,6 +411,7 @@ app.get('/', (c) => {
                             <div>
                                 <p class="text-gray-500 text-sm">1日平均</p>
                                 <p class="text-3xl font-bold text-green-600" id="daily-avg">0</p>
+                                <p class="text-xs text-gray-400 mt-1">登録済み使用分</p>
                             </div>
                             <i class="fas fa-chart-bar text-4xl text-green-200"></i>
                         </div>
@@ -600,16 +606,20 @@ app.get('/', (c) => {
 
             // 統計情報更新
             function updateStats() {
+                // 登録済み（生徒名あり）と未登録（生徒名なし）を分ける
+                const registeredData = allData.filter(row => row['生徒名'] && row['生徒名'].trim());
+                const unregisteredData = allData.filter(row => !row['生徒名'] || !row['生徒名'].trim());
+                
                 const totalCount = allData.length;
+                const registeredCount = registeredData.length;
+                const unregisteredCount = unregisteredData.length;
                 
                 // ユニークユーザー（生徒名ベース）
                 const uniqueUsers = new Set(
-                    allData
-                        .filter(row => row['生徒名'] && row['生徒名'].trim())
-                        .map(row => row['生徒名'])
+                    registeredData.map(row => row['生徒名'])
                 ).size;
                 
-                // 日付範囲
+                // 日付範囲（全データ）
                 const dates = allData
                     .map(row => new Date(row['タイムスタンプ']))
                     .filter(d => !isNaN(d.getTime()))
@@ -619,13 +629,15 @@ app.get('/', (c) => {
                     ? dayjs(dates[0]).format('YYYY/MM/DD') + ' - ' + dayjs(dates[dates.length - 1]).format('YYYY/MM/DD')
                     : '-';
                 
-                // 1日平均
+                // 1日平均（登録済みデータのみ）
                 const dayCount = dates.length > 0 
                     ? Math.ceil((dates[dates.length - 1] - dates[0]) / (1000 * 60 * 60 * 24)) + 1
                     : 1;
-                const dailyAvg = (totalCount / dayCount).toFixed(1);
+                const dailyAvg = (registeredCount / dayCount).toFixed(1);
                 
                 document.getElementById('total-count').textContent = totalCount.toLocaleString();
+                document.getElementById('registered-count').textContent = registeredCount.toLocaleString();
+                document.getElementById('unregistered-count').textContent = unregisteredCount.toLocaleString();
                 document.getElementById('unique-users').textContent = uniqueUsers;
                 document.getElementById('date-range').textContent = dateRange;
                 document.getElementById('daily-avg').textContent = dailyAvg;
