@@ -1,10 +1,14 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { ssoAuthMiddleware } from './middleware/sso-auth.js'
 
 const app = new Hono()
 
 // CORS設定
 app.use('/api/*', cors())
+
+// SSO Authentication (protects all routes)
+app.use('*', ssoAuthMiddleware)
 
 // マニュアルページ
 app.get('/manual.html', (c) => {

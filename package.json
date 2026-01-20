@@ -16,7 +16,9 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.8",
-    "hono": "^4.11.3"
+    "cookie-parser": "^1.4.7",
+    "hono": "^4.11.3",
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
