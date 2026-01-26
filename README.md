@@ -8,6 +8,7 @@
 
 ✅ **完成した機能**
 - ✨ Google Spreadsheetからのリアルタイムデータ取得（CSV形式）
+- 🔐 **SSO認証対応**（APIエンドポイントは認証から除外）
 - 📊 日次使用回数グラフ（月別選択機能付き）
 - 📈 月次使用回数グラフ
 - 🕐 **時間帯別使用回数グラフ（24時間分析）**
@@ -31,9 +32,19 @@
 
 ## URLs
 
-- **開発サーバー**: https://3000-imsyplbgtjzcitiatubnc-c81df28e.sandbox.novita.ai
-- **本番環境（Render）**: デプロイ後に追加
-- **API エンドポイント**: `/api/data` - スプレッドシートデータ取得
+- **開発サーバー**: https://3000-imsyplbgtjzcitiatubnc-c81df28e.sandbox.novita.ai （認証なし）
+- **本番環境（Render）**: https://wanamisan-monitor.onrender.com （SSO認証必須）
+- **API エンドポイント**: `/api/data` - スプレッドシートデータ取得（認証不要）
+
+### 🔐 SSO認証について
+
+本番環境ではSSO（Single Sign-On）認証が有効です：
+- **UIアクセス**: `?auth_token=<JWT_TOKEN>` が必要
+- **APIアクセス**: `/api/*` パスは認証不要
+- **静的ファイル**: `/static/*` パスは認証不要
+
+**環境変数**:
+- `JWT_SECRET`: JWT検証用のシークレットキー（Renderダッシュボードで設定）
 
 ## 📊 新機能詳細
 
