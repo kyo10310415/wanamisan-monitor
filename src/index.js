@@ -266,11 +266,11 @@ app.get('/api/data', async (c) => {
 })
 
 // 改良版CSVパーサー（改行とクォートを正しく処理）
-function parseCSV(csvText: string) {
-  const rows: string[][] = []
+function parseCSV(csvText) {
+  const rows = []
   const chars = csvText.split('')
   let currentField = ''
-  let currentRow: string[] = []
+  let currentRow = []
   let insideQuotes = false
   
   for (let i = 0; i < chars.length; i++) {
@@ -326,7 +326,7 @@ function parseCSV(csvText: string) {
   const data = []
   
   for (let i = 1; i < rows.length; i++) {
-    const row: any = {}
+    const row = {}
     headers.forEach((header, index) => {
       row[header] = rows[i][index] || ''
     })
