@@ -44,7 +44,32 @@
 - **静的ファイル**: `/static/*` パスは認証不要
 
 **環境変数**:
-- `JWT_SECRET`: JWT検証用のシークレットキー（Renderダッシュボードで設定）
+- `JWT_SECRET`: JWT検証用のシークレットキー（**wannav-mainと完全に同じ値を設定**）
+
+**🚨 重要**: Renderで`JWT_SECRET`環境変数を設定していない場合、SSO認証が失敗します。
+
+#### Renderでの環境変数設定手順
+
+1. **Renderダッシュボードにログイン**: https://render.com/
+2. **wanamisan-monitor サービスを選択**
+3. **Environment** タブを開く
+4. **Add Environment Variable** をクリック
+5. 以下を入力:
+   ```
+   Key: JWT_SECRET
+   Value: <wannav-mainと同じシークレットキー>
+   ```
+   **注意**: wannav-mainサービスの`JWT_SECRET`と**完全に同じ値**を設定してください
+6. **Save Changes** をクリック
+7. サービスが自動的に再デプロイされます（2-3分）
+
+#### JWT_SECRETの確認方法
+
+wannav-mainサービスで使用している`JWT_SECRET`を確認：
+1. Renderダッシュボード → **wannav-main** サービス
+2. **Environment** タブ
+3. `JWT_SECRET`の値をコピー
+4. 同じ値を**wanamisan-monitor**に設定
 
 ## 📊 新機能詳細
 
