@@ -4,9 +4,9 @@
   "scripts": {
     "dev": "vite",
     "dev:sandbox": "wrangler pages dev dist --ip 0.0.0.0 --port 3000",
-    "dev:node": "tsx server.ts",
+    "dev:node": "tsx server-backup.ts",
     "build": "vite build",
-    "start": "node server.mjs",
+    "start": "node server.js",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
     "deploy:prod": "npm run build && wrangler pages deploy dist --project-name wannav-analytics",
