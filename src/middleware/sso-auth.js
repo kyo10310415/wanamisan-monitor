@@ -54,14 +54,12 @@ export async function ssoAuthMiddleware(c, next) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60, // 7日間
-        sameSite: 'Lax',
+        sameSite: 'None', // Cross-siteアクセスを許可
         path: '/'
       });
       
-      // トークンをURLから削除してリダイレクト
-      const url = new URL(c.req.url);
-      url.searchParams.delete('auth_token');
-      return c.redirect(url.pathname);
+      // リダイレクトせず、そのまま次のハンドラーへ
+      // (リダイレクトするとCookieが失われる可能性があるため)
     }
 
     await next();
