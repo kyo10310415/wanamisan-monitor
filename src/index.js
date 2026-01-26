@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { ssoAuthMiddleware } from './middleware/sso-auth.js'
 
 const app = new Hono()
 
@@ -23,8 +24,7 @@ app.use('*', async (c, next) => {
     return next()
   }
   
-  // SSO認証ミドルウェアを動的にインポート
-  const { ssoAuthMiddleware } = await import('./middleware/sso-auth.js')
+  // SSO認証ミドルウェアを呼び出し
   return ssoAuthMiddleware(c, next)
 })
 
