@@ -1,30 +1,10 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { ssoAuthMiddleware } from './middleware/sso-auth.js'
 
 const app = new Hono()
 
-// JWT検証関数（シンプル実装）
-function verifyJWT(token: string, secret: string): any {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3) {
-      throw new Error('invalid token format')
-    }
-    
-    // ペイロードをデコード
-    const payload = JSON.parse(atob(parts[1]))
-    
-    // 有効期限チェック
-    if (payload.exp && payload.exp < Date.now() / 1000) {
-      throw new Error('token expired')
-    }
-    
-    return payload
-  } catch (error) {
-    throw new Error('invalid token')
-  }
-}
+// CORS設定（APIエンドポイント用 - 認証前に設定）
+app.use('/api/*', cors())
 
 // SSO認証ミドルウェア（APIエンドポイントは除外）
 app.use('*', async (c, next) => {
@@ -43,39 +23,10 @@ app.use('*', async (c, next) => {
     return next()
   }
   
-  // その他のパスはSSO認証を適用
-  const authToken = c.req.query('auth_token')
-  
-  if (!authToken) {
-    console.log('❌ SSO トークンが提供されていません:', c.req.path)
-    return c.text('Unauthorized: No auth token provided', 401)
-  }
-  
-  try {
-    // JWT Secret（環境変数から取得、なければデフォルト値）
-    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-here'
-    
-    // トークン検証
-    const payload = verifyJWT(authToken, jwtSecret)
-    
-    console.log('✅ SSO 認証成功:', payload.username || payload.userId)
-    
-    // 認証情報をコンテキストに保存
-    c.set('user', payload)
-    
-  } catch (error) {
-    console.log('❌ SSO トークン検証エラー:', error.message)
-    return c.text('Unauthorized: Invalid auth token', 401)
-  }
-  
-  await next()
+  // SSO認証ミドルウェアを動的にインポート
+  const { ssoAuthMiddleware } = await import('./middleware/sso-auth.js')
+  return ssoAuthMiddleware(c, next)
 })
-
-// CORS設定（APIエンドポイント用）
-app.use('/api/*', cors())
-
-// SSO Authentication (protects all routes)
-app.use('*', ssoAuthMiddleware)
 
 // マニュアルページ
 app.get('/manual.html', (c) => {
