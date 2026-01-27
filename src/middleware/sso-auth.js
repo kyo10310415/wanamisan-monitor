@@ -58,7 +58,7 @@ export async function ssoAuthMiddleware(c, next) {
       setCookie(c, 'wannav_sso', token, {
         httpOnly: true,
         secure: true,  // HTTPS必須（sameSite: 'None'の場合は必須）
-        maxAge: 7 * 24 * 60 * 60, // 7日間
+        maxAge: 60 * 60, // 1時間（秒単位）
         sameSite: 'None', // Cross-siteアクセスを許可
         path: '/'
       });
