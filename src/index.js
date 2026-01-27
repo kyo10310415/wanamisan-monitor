@@ -423,6 +423,7 @@ app.get('/', (c) => {
                             <div>
                                 <p class="text-gray-500 text-sm">1日平均</p>
                                 <p class="text-3xl font-bold text-green-600" id="daily-avg">0</p>
+                                <p class="text-sm text-gray-600 mt-2">KPI：280回</p>
                             </div>
                             <i class="fas fa-chart-bar text-4xl text-green-200"></i>
                         </div>
