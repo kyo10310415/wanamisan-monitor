@@ -53,18 +53,21 @@ export async function ssoAuthMiddleware(c, next) {
       role: decoded.role
     });
 
-    // クエリパラメータからトークンを取得した場合、Cookieに保存
+    // クエリパラメータからトークンを取得した場合、Cookieに保存してリダイレクト
     if (tokenFromQuery) {
       setCookie(c, 'wannav_sso', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,  // HTTPS必須（sameSite: 'None'の場合は必須）
         maxAge: 7 * 24 * 60 * 60, // 7日間
         sameSite: 'None', // Cross-siteアクセスを許可
         path: '/'
       });
       
-      // リダイレクトせず、そのまま次のハンドラーへ
-      // (リダイレクトするとCookieが失われる可能性があるため)
+      // トークンをURLから削除してリダイレクト
+      const url = new URL(c.req.url);
+      url.searchParams.delete('auth_token');
+      console.log('🔄 Cookieに保存してリダイレクト:', url.pathname + url.search);
+      return c.redirect(url.pathname + url.search);
     }
 
     await next();
