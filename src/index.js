@@ -1,8 +1,12 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { logger } from 'hono/logger'
 import { ssoAuthMiddleware } from './middleware/sso-auth.js'
 
 const app = new Hono()
+
+// ロガーミドルウェア（すべてのリクエストをログに記録）
+app.use('*', logger())
 
 // CORS設定（APIエンドポイント用 - 認証前に設定）
 app.use('/api/*', cors())
