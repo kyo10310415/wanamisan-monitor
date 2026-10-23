@@ -79,7 +79,7 @@
 │     https://docs.google.com/spreadsheets/       │
 │              d/1vKrYCzaw-miJOY52os...          │
 └──────────────────┬──────────────────────────────┘
-                   │ CSV Export (公開URL)
+                   │ Sheets API (認証付き読取り)
                    ▼
 ┌─────────────────────────────────────────────────┐
 │              Hono Backend API                    │
@@ -107,7 +107,7 @@
    ↓
 3. fetch('/api/data') でAPIリクエスト
    ↓
-4. Hono が Google Sheets CSV を取得
+4. Hono が 非公開Google Sheets APIから読取り
    ↓
 5. CSVをパース → JSON変換
    ↓
@@ -472,10 +472,10 @@ git push origin main
 ### Google Spreadsheet
 
 **スプレッドシートURL**:
-https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/edit?usp=sharing
+#private-sheet-configured-by-administrator
 
 **CSV Export URL**:
-https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/export?format=csv
+#private-sheet-configured-by-administrator
 
 ### データ構造
 
@@ -514,37 +514,14 @@ allData = result.data.filter(row => {
 
 1. **自動更新**: なし（ページリロードで最新データ取得）
 2. **手動更新**: ページをリロード（F5）
-3. **取得タイミング**: ページ読み込み時に毎回Google SheetsからCSVを取得
+3. **取得タイミング**: ページ読み込み時に毎回非公開Google Sheets APIから読取り
 
-### スプレッドシートの公開設定
+### 非公開スプレッドシートの設定
 
-**重要**: CSVエクスポート機能を有効にするため、スプレッドシートは以下の設定が必要:
+公開CSVは廃止しました。Sheets APIとサービスアカウントの対象シートへの閲覧権限を用意し、RenderへGOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY / GOOGLE_SPREADSHEET_ID / GOOGLE_SHEET_RANGEを設定してください。詳細はREADMEのSEC-021/022を参照してください。
 
-1. Google Sheetsで開く
-2. **共有** → **リンクを知っている全員が閲覧可** に設定
-3. **コピーを作成、ダウンロード、印刷を閲覧者に禁止する** のチェックを**外す**
+正規利用システムへの影響を確認してから一般的なアクセスを制限し、ウェブ公開を停止します。シートの公開設定はコード変更では切り替わりません。
 
-### データソースの変更方法
-
-別のスプレッドシートに切り替える場合:
-
-1. `src/index.tsx` の `SHEET_ID` を変更:
-
-```typescript
-const SHEET_ID = '新しいスプレッドシートID'
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`
-```
-
-2. ビルド・デプロイ:
-
-```bash
-npm run build
-git add src/index.tsx
-git commit -m "chore: データソースを変更"
-git push origin main
-```
-
----
 
 ## トラブルシューティング
 
@@ -573,7 +550,7 @@ pm2 logs wannav-analytics --nostream --lines 50
 3. Networkタブで`/api/data`のステータスを確認
 
 **解決方法**:
-- スプレッドシートの公開設定を確認
+- サービスアカウントの閲覧権限と設定を確認
 - CSVフォーマットが正しいか確認
 - JavaScriptコンソールエラーを修正
 
@@ -727,11 +704,7 @@ git push origin v1.0.0
 - **Google Sheets**: Googleの自動バックアップに依存
 - **定期エクスポート**: 週次でCSVエクスポートを推奨
 
-```bash
-# データをバックアップ
-curl -s "https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/export?format=csv" \
-  > backup_$(date +%Y%m%d).csv
-```
+バックアップは管理者が認証済みGoogle Sheetsから安全な組織の保存先へ取得します。
 
 ### モニタリング
 
@@ -787,7 +760,7 @@ pm2 logs wannav-analytics --lines 100
 #### アクセス制御
 
 **現在の実装**:
-- 認証なし（公開ダッシュボード）
+- SSO認証必須（ページ・API共通）
 
 **推奨される追加対策**:
 1. Basic認証の追加
@@ -909,7 +882,7 @@ fuser -k 3000/tcp
 | 開発環境 | https://3000-imsyplbgtjzcitiatubnc-c81df28e.sandbox.novita.ai |
 | 本番環境 | https://wanamisan-monitor.onrender.com |
 | GitHub | https://github.com/kyo10310415/wanamisan-monitor |
-| スプレッドシート | https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M |
+| スプレッドシート | #private-sheet-configured-by-administrator |
 | Render Dashboard | https://dashboard.render.com/ |
 
 ### D. 連絡先

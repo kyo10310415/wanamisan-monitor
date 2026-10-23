@@ -1,36 +1,12 @@
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
-import { logger } from 'hono/logger'
 import { ssoAuthMiddleware } from './middleware/sso-auth.js'
+import { createSheetsReader, readSheetsConfig } from './sheets.js'
 
+const readData = createSheetsReader(readSheetsConfig(process.env))
 const app = new Hono()
 
-// ロガーミドルウェア（すべてのリクエストをログに記録）
-app.use('*', logger())
-
-// CORS設定（APIエンドポイント用 - 認証前に設定）
-app.use('/api/*', cors())
-
-// SSO認証ミドルウェア（APIエンドポイントは除外）
-app.use('*', async (c, next) => {
-  // APIエンドポイントは認証をスキップ
-  if (c.req.path.startsWith('/api/')) {
-    return next()
-  }
-  
-  // 静的ファイルも認証をスキップ
-  if (c.req.path.startsWith('/static/')) {
-    return next()
-  }
-  
-  // favicon等も認証をスキップ
-  if (c.req.path === '/favicon.ico') {
-    return next()
-  }
-  
-  // SSO認証ミドルウェアを呼び出し
-  return ssoAuthMiddleware(c, next)
-})
+// Apply SSO before every business page and API; do not log query tokens.
+app.use('*', ssoAuthMiddleware)
 
 // マニュアルページ
 app.get('/manual.html', (c) => {
@@ -242,103 +218,14 @@ app.get('/manual.html', (c) => {
   `)
 })
 
-// API: スプレッドシートデータ取得
+// Authenticated, read-only Sheets access; no public CSV fallback.
 app.get('/api/data', async (c) => {
   try {
-    // Google Sheets CSV Export URL
-    const SHEET_ID = '1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M'
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`
-    
-    const response = await fetch(CSV_URL)
-    if (!response.ok) {
-      throw new Error('Failed to fetch spreadsheet data')
-    }
-    
-    const csvText = await response.text()
-    const parsedData = parseCSV(csvText)
-    
-    return c.json({
-      success: true,
-      data: parsedData
-    })
-  } catch (error) {
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, 500)
+    return c.json({ success: true, data: await readData() })
+  } catch {
+    return c.json({ success: false, error: 'Data is temporarily unavailable' }, 502)
   }
 })
-
-// 改良版CSVパーサー（改行とクォートを正しく処理）
-function parseCSV(csvText) {
-  const rows = []
-  const chars = csvText.split('')
-  let currentField = ''
-  let currentRow = []
-  let insideQuotes = false
-  
-  for (let i = 0; i < chars.length; i++) {
-    const char = chars[i]
-    const nextChar = chars[i + 1]
-    
-    if (char === '"') {
-      if (insideQuotes && nextChar === '"') {
-        // エスケープされたクォート
-        currentField += '"'
-        i++ // 次の文字をスキップ
-      } else {
-        // クォートの開始/終了
-        insideQuotes = !insideQuotes
-      }
-    } else if (char === ',' && !insideQuotes) {
-      // フィールドの区切り
-      currentRow.push(currentField.trim())
-      currentField = ''
-    } else if (char === '\n' && !insideQuotes) {
-      // 行の終わり
-      currentRow.push(currentField.trim())
-      if (currentRow.some(field => field.length > 0)) {
-        rows.push(currentRow)
-      }
-      currentRow = []
-      currentField = ''
-    } else if (char === '\r' && nextChar === '\n' && !insideQuotes) {
-      // Windows改行 (\r\n)
-      currentRow.push(currentField.trim())
-      if (currentRow.some(field => field.length > 0)) {
-        rows.push(currentRow)
-      }
-      currentRow = []
-      currentField = ''
-      i++ // \nをスキップ
-    } else {
-      currentField += char
-    }
-  }
-  
-  // 最後のフィールドと行を追加
-  if (currentField || currentRow.length > 0) {
-    currentRow.push(currentField.trim())
-    if (currentRow.some(field => field.length > 0)) {
-      rows.push(currentRow)
-    }
-  }
-  
-  if (rows.length === 0) return []
-  
-  const headers = rows[0]
-  const data = []
-  
-  for (let i = 1; i < rows.length; i++) {
-    const row = {}
-    headers.forEach((header, index) => {
-      row[header] = rows[i][index] || ''
-    })
-    data.push(row)
-  }
-  
-  return data
-}
 
 // メインページ
 app.get('/', (c) => {

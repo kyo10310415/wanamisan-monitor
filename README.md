@@ -7,7 +7,7 @@
 ### 主な機能
 
 ✅ **完成した機能**
-- ✨ Google Spreadsheetからのリアルタイムデータ取得（CSV形式）
+- ✨ 非公開Google Spreadsheetからの認証付きリアルタイムデータ取得
 - 🔐 **SSO認証対応**（APIエンドポイントは認証から除外）
 - 📊 日次使用回数グラフ（月別選択機能付き）
 - 📈 月次使用回数グラフ
@@ -25,7 +25,7 @@
 
 ### データソース
 
-- **スプレッドシート**: [わなみさん使用ログ](https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/edit?usp=sharing)
+- **スプレッドシート**: 管理者が設定する非公開の使用ログシート
 - **フィルタリング**: 
   - F列（サーバー名）が「WannaV Tutors Community」のレコードを除外
   - **N列（生徒名）が空のレコードを除外** ← 統計・グラフ・ランキングすべてに適用
@@ -34,7 +34,7 @@
 
 - **開発サーバー**: https://3000-imsyplbgtjzcitiatubnc-c81df28e.sandbox.novita.ai （認証なし）
 - **本番環境（Render）**: https://wanamisan-monitor.onrender.com （SSO認証必須）
-- **API エンドポイント**: `/api/data` - スプレッドシートデータ取得（認証不要）
+- **API エンドポイント**: `/api/data` - スプレッドシートデータ取得（SSO認証必須）
 
 ### 🔐 SSO認証について
 
@@ -132,7 +132,7 @@ wannav-mainサービスで使用している`JWT_SECRET`を確認：
 ### データフロー
 
 ```
-Google Sheets (CSV Export)
+Google Sheets API（認証付き読取り）
     ↓
 Hono API (/api/data) - 全データ取得
     ↓
@@ -425,3 +425,34 @@ npm install
 - 本番: Render.com（Node.js + @hono/node-server）
 - ポート: 開発=3000、本番=10000（Render自動設定）
 - スプレッドシートの公開設定が必要（CSV Export有効化）
+
+## SEC-021 / SEC-022：認証と非公開データ取得
+
+全ページ・全APIをSSO認証の対象にし、匿名APIはJSON 401、HTMLは共通ダッシュボードへリダイレクトします。従来SSOで利用できたadmin/leader/crewの読取りを維持し、未知role、別target origin、type違い、期限なし・1時間超・期限切れtoken、HS256以外を拒否します。APIのクエリtokenは受理せず、HTMLの入口でのみHttpOnly/Secure/Lax cookieに交換してURLから削除します。鍵断片・token・利用者名をログに出しません。no-storeとno-referrerを設定します。
+
+### 配備前に必要な設定
+
+| Key | 内容 |
+|---|---|
+| JWT_SECRET | WannaV-mainと同じ、32文字以上の強い既存共有鍵。公開サンプル値は拒否 |
+| APP_ORIGIN | このサービスの実際のHTTPS origin。RenderではRENDER_EXTERNAL_URLも利用可 |
+| GOOGLE_SERVICE_ACCOUNT_EMAIL | 使用ログシートを読めるサービスアカウントのclient_email |
+| GOOGLE_PRIVATE_KEY | 同アカウントのRSA秘密鍵。Renderの秘密変数へ直接入力。改行または\n形式 |
+| GOOGLE_SPREADSHEET_ID | 管理者が確認した元シートのID |
+| GOOGLE_SHEET_RANGE | 実際のタブ名とA1範囲。例はUsageLog!A:O。1行目のヘッダーを含める |
+
+Google Sheets APIを有効にし、対象シートだけをサービスアカウントへ閲覧共有します。新しい権限付与・資格情報の発行は所有者が実施してください。既存の適切なサービスアカウントがある場合は不要に再発行しません。秘密値をコード・ログ・チャットに書かないでください。
+
+公開CSVへのfallbackはありません。サービスアカウントの読取りを確認してから元シートの「一般的なアクセス」を必要な組織・利用者だけへ制限し、「ウェブに公開」を利用している場合も公開停止を確認してください。他の正規利用システムへの影響を先に点検します。アプリの変更だけでは既存のシート公開設定は変更されません。公開停止を確認するまで、元シートの直接漏洩経路が解消済みとは扱いません。
+
+APIは既存UIが参照するタイムスタンプ・サーバー名・質問タイプ・生徒名・学籍番号・質問内容・回答内容の7列のみ返します。その他の内部列は返さなくなるため、独自クライアントがある場合は確認してください。質問内容と回答内容は既存UIの詳細表示で必要なため維持しています。
+
+### 検証と運用
+
+`npm run test:security`はmock Google通信と生成した隔離用鍵のみを利用。認証拒否、role/target/lifetime、実APIのGoogle呼出し前拒否、読取りスコープ、固定宛先、転送禁止、token cache、エラー最小化と列射影を検証します。`npm run build`も確認します。実Google/本番シート・SSOログインは別途確認が必要です。
+
+未設定・短い共有鍵・公開既定値・Sheets資格情報の欠落は起動時に拒否します。過去に既定鍵を使っていた場合は所有者が全SSO連携先と鍵交換・session失効を調整してください。DBschema変更・新規依存はありません。ユーザー停止・降格の既存1時間SSOへの即時反映、画面内の既存XSS対策等は別の確認が必要です。
+
+技術根拠：Google公式のサービスアカウントOAuth手順とSheets values.getを使用します。
+- https://developers.google.com/identity/protocols/oauth2/service-account
+- https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets.values/get

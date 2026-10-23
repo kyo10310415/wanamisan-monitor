@@ -306,13 +306,13 @@
 │     https://docs.google.com/spreadsheets/       │
 │              d/1vKrYCzaw-miJOY52os...          │
 └──────────────────┬──────────────────────────────┘
-                   │ CSV Export (公開URL)
+                   │ Sheets API (認証付き読取り)
                    ▼
 ┌─────────────────────────────────────────────────┐
 │              Hono Backend API                    │
 │              /api/data endpoint                  │
 │  - データ取得（fetch）                            │
-│  - CSVパース（カスタムパーサー）                   │
+│  - 必要列へのJSON変換                   │
 │  - フィルタリング（除外処理）                      │
 └──────────────────┬──────────────────────────────┘
                    │ JSON
@@ -331,9 +331,9 @@
    ↓
 3. fetch(&#39;/api/data&#39;) でAPIリクエスト
    ↓
-4. Hono が Google Sheets CSV を取得
+4. Hono が 非公開Google Sheets APIから読取り
    ↓
-5. CSVをパース → JSON変換
+5. 必要な列をJSONへ変換
    ↓
 6. フィルタリング（WannaV Tutors Community除外）
    ↓
@@ -653,9 +653,9 @@ git push origin main
 <h2>データソース管理</h2>
 <h3>Google Spreadsheet</h3>
 <p><strong>スプレッドシートURL</strong>:
-<a href="https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/edit?usp=sharing">https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/edit?usp=sharing</a></p>
+<a href="#private-sheet-configured-by-administrator">#private-sheet-configured-by-administrator</a></p>
 <p><strong>CSV Export URL</strong>:
-<a href="https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/export?format=csv">https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/export?format=csv</a></p>
+<a href="#private-sheet-configured-by-administrator">#private-sheet-configured-by-administrator</a></p>
 <h3>データ構造</h3>
 <p><strong>列構成</strong>:</p>
 <table>
@@ -766,31 +766,11 @@ git push origin main
 <ol>
 <li><strong>自動更新</strong>: なし（ページリロードで最新データ取得）</li>
 <li><strong>手動更新</strong>: ページをリロード（F5）</li>
-<li><strong>取得タイミング</strong>: ページ読み込み時に毎回Google SheetsからCSVを取得</li>
+<li><strong>取得タイミング</strong>: ページ読み込み時に毎回非公開Google Sheets APIから読取り</li>
 </ol>
-<h3>スプレッドシートの公開設定</h3>
-<p><strong>重要</strong>: CSVエクスポート機能を有効にするため、スプレッドシートは以下の設定が必要:</p>
-<ol>
-<li>Google Sheetsで開く</li>
-<li><strong>共有</strong> → <strong>リンクを知っている全員が閲覧可</strong> に設定</li>
-<li><strong>コピーを作成、ダウンロード、印刷を閲覧者に禁止する</strong> のチェックを<strong>外す</strong></li>
-</ol>
-<h3>データソースの変更方法</h3>
-<p>別のスプレッドシートに切り替える場合:</p>
-<ol>
-<li><code>src/index.tsx</code> の <code>SHEET_ID</code> を変更:</li>
-</ol>
-<pre><code class="language-typescript">const SHEET_ID = &#39;新しいスプレッドシートID&#39;
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`
-</code></pre>
-<ol start="2">
-<li>ビルド・デプロイ:</li>
-</ol>
-<pre><code class="language-bash">npm run build
-git add src/index.tsx
-git commit -m &quot;chore: データソースを変更&quot;
-git push origin main
-</code></pre>
+<h3>非公開スプレッドシートの設定</h3>
+<p>公開CSVは廃止しました。Sheets APIを有効にし、サービスアカウントへ対象シートだけを閲覧共有してください。資格情報はRenderの秘密変数に設定し、GOOGLE_SPREADSHEET_IDとGOOGLE_SHEET_RANGEでデータ元を選びます。</p>
+<p>正規システムへの影響を確認してから、一般的なアクセスを制限し、ウェブ公開も停止してください。シートを「リンクを知っている全員」へ公開する設定は不要です。詳細はREADMEのSEC-021/022を参照してください。</p>
 <hr>
 <h2>トラブルシューティング</h2>
 <h3>よくある問題と解決方法</h3>
@@ -816,7 +796,7 @@ pm2 logs wannav-analytics --nostream --lines 50
 </ol>
 <p><strong>解決方法</strong>:</p>
 <ul>
-<li>スプレッドシートの公開設定を確認</li>
+<li>サービスアカウントの閲覧権限と設定を確認</li>
 <li>CSVフォーマットが正しいか確認</li>
 <li>JavaScriptコンソールエラーを修正</li>
 </ul>
@@ -958,10 +938,7 @@ git push origin v1.0.0
 <li><strong>Google Sheets</strong>: Googleの自動バックアップに依存</li>
 <li><strong>定期エクスポート</strong>: 週次でCSVエクスポートを推奨</li>
 </ul>
-<pre><code class="language-bash"># データをバックアップ
-curl -s &quot;https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M/export?format=csv&quot; \
-  &gt; backup_$(date +%Y%m%d).csv
-</code></pre>
+<p>バックアップは権限を持つ管理者が認証済みGoogle Sheetsから行い、組織の安全な保存先で保管します。公開CSVは使用しません。</p>
 <h3>モニタリング</h3>
 <h4>パフォーマンス指標</h4>
 <p><strong>監視項目</strong>:</p>
@@ -1008,7 +985,7 @@ pm2 logs wannav-analytics --lines 100
 <h4>アクセス制御</h4>
 <p><strong>現在の実装</strong>:</p>
 <ul>
-<li>認証なし（公開ダッシュボード）</li>
+<li>SSO認証必須（ページ・API共通）</li>
 </ul>
 <p><strong>推奨される追加対策</strong>:</p>
 <ol>
@@ -1142,7 +1119,7 @@ fuser -k 3000/tcp
 </tr>
 <tr>
 <td>スプレッドシート</td>
-<td><a href="https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M">https://docs.google.com/spreadsheets/d/1vKrYCzaw-miJOY52oskNoMfn-uEHIolBMhC7uMxxN_M</a></td>
+<td><a href="#private-sheet-configured-by-administrator">#private-sheet-configured-by-administrator</a></td>
 </tr>
 <tr>
 <td>Render Dashboard</td>
